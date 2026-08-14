@@ -28,6 +28,10 @@ class ProductSeeder extends Seeder
             ];
         }
 
-        DB::table('products')->insert($rows);
+        DB::table('products')->upsert(
+            $rows,
+            ['code'],
+            ['name', 'price', 'stock', 'is_active', 'updated_at'],
+        );
     }
 }

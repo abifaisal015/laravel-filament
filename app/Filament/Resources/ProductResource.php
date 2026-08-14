@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Product;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -91,8 +93,7 @@ class ProductResource extends Resource
             ->columns([
                 TextColumn::make('code')
                     ->label('Code')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(),
 
                 TextColumn::make('name')
                     ->label('Name')
@@ -101,17 +102,15 @@ class ProductResource extends Resource
 
                 TextColumn::make('price')
                     ->label('Price')
-                    ->formatStateUsing(fn ($state) => 'Rp '.number_format((float) $state, 2, ',', '.'))
+                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 2, ',', '.'))
                     ->sortable(),
 
                 TextColumn::make('stock')
-                    ->label('Stock')
-                    ->sortable(),
+                    ->label('Stock'),
 
                 BadgeColumn::make('is_active')
                     ->label('Status')
-                    ->sortable()
-                    ->formatStateUsing(fn (?bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->formatStateUsing(fn(?bool $state): string => $state ? 'Active' : 'Inactive')
                     ->colors([
                         'success' => true,
                         'danger' => false,
@@ -119,8 +118,11 @@ class ProductResource extends Resource
 
                 TextColumn::make('created_at')
                     ->label('Created At')
-                    ->dateTime('d M Y H:i')
-                    ->sortable(),
+                    ->dateTime('d M Y H:i'),
+            ])
+            ->actions([
+                EditAction::make(),
+                DeleteAction::make(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('is_active')
@@ -130,19 +132,44 @@ class ProductResource extends Resource
                         '0' => 'Inactive',
                     ])
                     ->placeholder('All status')
-                    ->query(fn ($query, $value) => $query->where('is_active', $value)),
+                    ->default(null)
+                    ->query(function ($query, array $data) {
+                        $value = $data['value'] ?? null;
+
+                        if ($value === null || $value === '') {
+                            return $query;
+                        }
+
+                        $state = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+                        return $state === null ? $query : $query->where('is_active', $state);
+                    }),
 
                 Tables\Filters\TernaryFilter::make('stock')
                     ->label('Stock = 0')
                     ->placeholder('All products')
                     ->trueLabel('Only out of stock')
                     ->falseLabel('In stock')
-                    ->query(fn ($query, $state) => $state === true ? $query->where('stock', 0) : $query),
+                    ->default(null)
+                    ->query(function ($query, array $data) {
+                        $value = $data['value'] ?? null;
+
+                        if ($value === null || $value === '') {
+                            return $query;
+                        }
+
+                        $state = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+                        return match ($state) {
+                            true => $query->where('stock', 0),
+                            false => $query->where('stock', '>', 0),
+                            default => $query,
+                        };
+                    }),
             ])
             ->defaultSort('name')
             ->searchable(['code', 'name']);
     }
-
 
     public static function getPages(): array
     {
