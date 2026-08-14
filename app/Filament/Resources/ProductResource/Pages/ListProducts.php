@@ -3,10 +3,11 @@
 namespace App\Filament\Resources\ProductResource\Pages;
 
 use App\Filament\Resources\ProductResource;
-use Filament\Actions\CreateAction;
+use App\Filament\Resources\ProductResource\Widgets\StockInfoWidget;
 use Filament\Actions\Action;
-use Filament\Support\Icons\Heroicon;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Icons\Heroicon;
 use Livewire\Attributes\Url;
 
 class ListProducts extends ListRecords
@@ -18,7 +19,7 @@ class ListProducts extends ListRecords
 
     public function toggleStockInfo(): void
     {
-        $this->showStockInfo = !$this->showStockInfo;
+        $this->showStockInfo = ! $this->showStockInfo;
     }
 
     protected function getHeaderActions(): array
@@ -29,7 +30,7 @@ class ListProducts extends ListRecords
                 ->color('primary')
                 ->action('toggleStockInfo')
                 ->extraAttributes([
-                    'x-data' => "{ processing: false }",
+                    'x-data' => '{ processing: false }',
                     '@click' => 'processing = true; $wire.toggleStockInfo().then(() => processing = false);',
                     'x-bind:disabled' => 'processing',
                 ]),
@@ -47,12 +48,12 @@ class ListProducts extends ListRecords
 
     public function getHeaderWidgets(): array
     {
-        if (!$this->showStockInfo) {
+        if (! $this->showStockInfo) {
             return [];
         }
 
         return [
-            \App\Filament\Resources\ProductResource\Widgets\StockInfoWidget::class,
+            StockInfoWidget::class,
         ];
     }
 }

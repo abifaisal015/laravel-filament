@@ -3,14 +3,19 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
-use App\Models\Product;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use App\Models\Category;
+use App\Models\Product;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Columns\BadgeColumn;
@@ -54,7 +59,7 @@ class ProductResource extends Resource
         return true;
     }
 
-    public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
@@ -108,7 +113,7 @@ class ProductResource extends Resource
 
                 TextColumn::make('price')
                     ->label('Price')
-                    ->formatStateUsing(fn($state) => 'Rp ' . number_format((float) $state, 2, ',', '.'))
+                    ->formatStateUsing(fn ($state) => 'Rp '.number_format((float) $state, 2, ',', '.'))
                     ->sortable(),
 
                 TextColumn::make('stock')
@@ -116,7 +121,7 @@ class ProductResource extends Resource
 
                 BadgeColumn::make('is_active')
                     ->label('Status')
-                    ->formatStateUsing(fn(?bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->formatStateUsing(fn (?bool $state): string => $state ? 'Active' : 'Inactive')
                     ->colors([
                         'success' => true,
                         'danger' => false,
@@ -128,7 +133,7 @@ class ProductResource extends Resource
             ])
             ->actions([
                 EditAction::make(),
-                \Filament\Actions\Action::make('deactivate')
+                Action::make('deactivate')
                     ->label('Deactivate')
                     ->color('danger')
                     ->icon(Heroicon::OutlinedXMark)
@@ -138,27 +143,28 @@ class ProductResource extends Resource
                     ->modalSubmitActionLabel('Yes, deactivate it')
                     ->action(function (Product $record) {
                         if ($record->stock > 0) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->danger()
                                 ->title('Product cannot be deactivated')
                                 ->body('Product still has stock. Stock must be 0 to deactivate.')
                                 ->send();
+
                             return;
                         }
 
                         $record->update(['is_active' => false]);
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->success()
                             ->title('Product deactivated successfully')
                             ->send();
                     })
-                    ->visible(fn(Product $record) => $record->is_active),
+                    ->visible(fn (Product $record) => $record->is_active),
                 DeleteAction::make(),
             ])
             ->bulkActions([
-                \Filament\Actions\BulkActionGroup::make([
-                    \Filament\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->filters([

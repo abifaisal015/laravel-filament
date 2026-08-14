@@ -4,14 +4,16 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CustomerResource\Pages;
 use App\Models\Customer;
+use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -52,7 +54,7 @@ class CustomerResource extends Resource
         return true;
     }
 
-    public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
@@ -98,17 +100,17 @@ class CustomerResource extends Resource
 
                 TextColumn::make('is_active')
                     ->label('Status')
-                    ->formatStateUsing(fn(?bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->formatStateUsing(fn (?bool $state): string => $state ? 'Active' : 'Inactive')
                     ->badge()
-                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
+                    ->color(fn (bool $state): string => $state ? 'success' : 'danger'),
             ])
             ->actions([
                 EditAction::make(),
                 DeleteAction::make(),
             ])
             ->bulkActions([
-                \Filament\Actions\BulkActionGroup::make([
-                    \Filament\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ])
             ->filters([

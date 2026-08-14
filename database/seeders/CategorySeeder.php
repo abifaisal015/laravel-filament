@@ -22,7 +22,7 @@ class CategorySeeder extends Seeder
             'Buku & Alat Tulis',
             'Mainan & Hobi',
             'Otomotif',
-            'Furniture'
+            'Furniture',
         ];
 
         foreach ($categories as $category) {
