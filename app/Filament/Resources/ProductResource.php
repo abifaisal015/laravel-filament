@@ -6,10 +6,11 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Product;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use App\Models\Category;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Columns\BadgeColumn;
@@ -53,7 +54,7 @@ class ProductResource extends Resource
         return true;
     }
 
-    public static function form(Schema $schema): Schema
+    public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {
         return $schema
             ->components([
@@ -67,6 +68,11 @@ class ProductResource extends Resource
                     ->label('Name')
                     ->required()
                     ->maxLength(255),
+
+                Select::make('category_id')
+                    ->label('Category')
+                    ->options(Category::pluck('name', 'id'))
+                    ->searchable(),
 
                 TextInput::make('price')
                     ->label('Price')
@@ -122,7 +128,38 @@ class ProductResource extends Resource
             ])
             ->actions([
                 EditAction::make(),
+                \Filament\Actions\Action::make('deactivate')
+                    ->label('Deactivate')
+                    ->color('danger')
+                    ->icon(Heroicon::OutlinedXMark)
+                    ->requiresConfirmation()
+                    ->modalHeading('Deactivate Product')
+                    ->modalDescription('Are you sure you want to deactivate this product?')
+                    ->modalSubmitActionLabel('Yes, deactivate it')
+                    ->action(function (Product $record) {
+                        if ($record->stock > 0) {
+                            \Filament\Notifications\Notification::make()
+                                ->danger()
+                                ->title('Product cannot be deactivated')
+                                ->body('Product still has stock. Stock must be 0 to deactivate.')
+                                ->send();
+                            return;
+                        }
+
+                        $record->update(['is_active' => false]);
+
+                        \Filament\Notifications\Notification::make()
+                            ->success()
+                            ->title('Product deactivated successfully')
+                            ->send();
+                    })
+                    ->visible(fn(Product $record) => $record->is_active),
                 DeleteAction::make(),
+            ])
+            ->bulkActions([
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                ]),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('is_active')

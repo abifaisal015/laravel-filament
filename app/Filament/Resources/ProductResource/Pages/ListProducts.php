@@ -3,30 +3,56 @@
 namespace App\Filament\Resources\ProductResource\Pages;
 
 use App\Filament\Resources\ProductResource;
-use App\Filament\Resources\ProductResource\Widgets\ProductStatsOverview;
 use Filament\Actions\CreateAction;
-use Filament\Actions\Action as ActionsAction;
+use Filament\Actions\Action;
+use Filament\Support\Icons\Heroicon;
 use Filament\Resources\Pages\ListRecords;
+use Livewire\Attributes\Url;
 
 class ListProducts extends ListRecords
 {
     protected static string $resource = ProductResource::class;
 
+    #[Url]
+    public bool $showStockInfo = false;
+
+    public function toggleStockInfo(): void
+    {
+        $this->showStockInfo = !$this->showStockInfo;
+    }
+
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('toggleStock')
+                ->label(fn () => $this->showStockInfo ? 'Hide Stock Information' : 'Show Stock Information')
+                ->color('primary')
+                ->action('toggleStockInfo')
+                ->extraAttributes([
+                    'x-data' => "{ processing: false }",
+                    '@click' => 'processing = true; $wire.toggleStockInfo().then(() => processing = false);',
+                    'x-bind:disabled' => 'processing',
+                ]),
+            Action::make('refresh')
+                ->label('Refresh')
+                ->icon(Heroicon::OutlinedArrowPath)
+                ->color('primary')
+                ->action(function () {
+                    $this->dispatch('refreshTable');
+                    $this->dispatch('$refresh');
+                }),
             CreateAction::make(),
-            ActionsAction::make('Refresh')
-                ->action(fn() => $this->dispatch('refreshStatsOverviewWidget'))
-                ->icon('heroicon-o-arrow-path')
-                ->color('primary'),
         ];
     }
 
-    protected function getHeaderWidgets(): array
+    public function getHeaderWidgets(): array
     {
+        if (!$this->showStockInfo) {
+            return [];
+        }
+
         return [
-            ProductStatsOverview::class,
+            \App\Filament\Resources\ProductResource\Widgets\StockInfoWidget::class,
         ];
     }
 }

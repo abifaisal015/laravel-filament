@@ -9,7 +9,6 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Columns\BadgeColumn;
@@ -53,7 +52,7 @@ class CustomerResource extends Resource
         return true;
     }
 
-    public static function form(Schema $schema): Schema
+    public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {
         return $schema
             ->components([
@@ -88,31 +87,29 @@ class CustomerResource extends Resource
             ->columns([
                 TextColumn::make('code')
                     ->label('Code')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(),
 
                 TextColumn::make('name')
                     ->label('Name')
-                    ->searchable()
-                    ->sortable(),
+                    ->searchable(),
 
                 TextColumn::make('phone')
                     ->label('Phone'),
 
-                TextColumn::make('address')
-                    ->label('Address'),
-
-                BadgeColumn::make('is_active')
+                TextColumn::make('is_active')
                     ->label('Status')
                     ->formatStateUsing(fn(?bool $state): string => $state ? 'Active' : 'Inactive')
-                    ->colors([
-                        'success' => true,
-                        'danger' => false,
-                    ]),
+                    ->badge()
+                    ->color(fn(bool $state): string => $state ? 'success' : 'danger'),
             ])
             ->actions([
                 EditAction::make(),
                 DeleteAction::make(),
+            ])
+            ->bulkActions([
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                ]),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('is_active')
