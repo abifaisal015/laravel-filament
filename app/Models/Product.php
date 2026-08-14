@@ -13,7 +13,7 @@ class Product extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<string>
+     * @var list<string>
      */
     protected $fillable = [
         'code',
@@ -26,6 +26,8 @@ class Product extends Model
 
     /**
      * Get the category that owns the product.
+     *
+     * @return BelongsTo<Category, $this>
      */
     public function category(): BelongsTo
     {

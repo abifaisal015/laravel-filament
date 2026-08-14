@@ -50,10 +50,17 @@ class User extends Authenticatable implements FilamentUser
      */
     public function initials(): string
     {
-        $initials = Str::initials($this->name, true);
+        $words = explode(' ', $this->name);
+        $initials = '';
+
+        foreach ($words as $word) {
+            if (! empty($word)) {
+                $initials .= strtoupper(mb_substr($word, 0, 1));
+            }
+        }
 
         return Str::length($initials) > 1
-            ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
+            ? Str::substr($initials, 0, 1) . Str::substr($initials, -1)
             : $initials;
     }
 }

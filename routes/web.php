@@ -5,10 +5,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 
-Route::view('/', 'welcome')->name('home');
+Route::get('/', function () {
+    return redirect('/admin/login');
+})->name('home');
 
 Route::middleware('guest')->group(function () {
-    Route::get('/login', fn () => view('auth.login'))->name('login');
+    Route::get('/login', fn() => view('auth.login'))->name('login');
 
     Route::post('/login', function (Request $request) {
         $credentials = $request->validate([
